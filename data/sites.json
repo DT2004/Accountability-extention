@@ -1,0 +1,14 @@
+{
+  "focused": [
+    "github.com", "stackoverflow.com", "docs.google.com",
+    "notion.so", "figma.com", "codepen.io", "replit.com"
+  ],
+  "distracted": [
+    "twitter.com", "x.com", "tiktok.com", "instagram.com",
+    "youtube.com", "reddit.com", "facebook.com", "netflix.com"
+  ],
+  "neutral": [
+    "gmail.com", "slack.com", "zoom.us", "calendar.google.com",
+    "drive.google.com", "dropbox.com"
+  ]
+} 

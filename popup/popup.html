@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Accountability Bubble Settings</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Settings</h1>
+    
+    <div class="setting">
+      <label for="enable-extension">Enable Extension</label>
+      <input type="checkbox" id="enable-extension" checked>
+    </div>
+
+    <div class="setting">
+      <label for="message-frequency">Message Frequency</label>
+      <select id="message-frequency">
+        <option value="300000">Every 5 min</option>
+        <option value="600000">Every 10 min</option>
+        <option value="1800000">Every 30 min</option>
+      </select>
+    </div>
+
+    <div class="setting">
+      <label for="focus-mode">Focus Mode</label>
+      <input type="checkbox" id="focus-mode">
+    </div>
+
+    <div class="setting">
+      <label for="ai-messages">AI Messages (OpenAI)</label>
+      <input type="checkbox" id="ai-messages">
+    </div>
+
+    <hr>
+
+    <h2>Custom Sites</h2>
+    <div id="custom-sites-list"></div>
+    <div class="add-site">
+      <input type="text" id="custom-site-domain" placeholder="domain.com">
+      <select id="custom-site-category">
+        <option value="focused">Focused</option>
+        <option value="distracted">Distracted</option>
+        <option value="neutral">Neutral</option>
+      </select>
+      <button id="add-site-btn">Add</button>
+    </div>
+    
+    <hr>
+
+    <h2>Stats</h2>
+    <div id="stats-dashboard">
+      <p>Daily Focus Time: <span id="focus-time">0h 0m</span></p>
+      <p>Top Distraction: <span id="top-distraction">None</span></p>
+      <p>Productivity Score: <span id="prod-score">N/A</span></p>
+    </div>
+
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html> 

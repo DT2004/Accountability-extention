@@ -1,0 +1,17 @@
+{
+  "focused": [
+    {"emoji": "🔥", "text": "You're in the zone! This is what success looks like."},
+    {"emoji": "🚀", "text": "Locked in. Beautiful. Keep this momentum going."},
+    {"emoji": "⚡", "text": "Deep work mode activated. You're building something amazing."}
+  ],
+  "distracted": [
+    {"emoji": "😤", "text": "Bro, stop doom-scrolling and get back to building!"},
+    {"emoji": "🛑", "text": "This isn't bringing you closer to your goals. Redirect that energy."},
+    {"emoji": "⏰", "text": "Your future self is counting on what you do right now."}
+  ],
+  "neutral": [
+    {"emoji": "⚡", "text": "Handle this quickly and get back to deep work."},
+    {"emoji": "🎯", "text": "Necessary tasks done efficiently = more time for what matters."},
+    {"emoji": "⏱️", "text": "Time-box this activity and return to your priorities."}
+  ]
+} 
