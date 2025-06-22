@@ -34,16 +34,56 @@ async function getSiteCategory(hostname) {
   return 'neutral';
 }
 
-// 3. Message Selection Logic
-async function getRandomMessage(category) {
-    const { messages } = await getStorageData(['messages']);
-    if (!messages || !messages[category] || messages[category].length === 0) {
-        return { emoji: '🤔', text: 'No messages found for this category.' };
+// 3. Intelligent Message Generation
+async function getAIMessage(category) {
+  const { settings } = await getStorageData(['settings']);
+  const { userName, userGoal, motivationStyle } = settings || {};
+
+  // If user hasn't completed setup, return a generic message
+  if (!userName || !userGoal) {
+    return { text: "Welcome! Click the extension icon to set up your AI coach." };
+  }
+
+  // Define smart templates
+  const templates = {
+    distracted: {
+      direct: [
+        `Is this helping you ${userGoal}, ${userName}?`,
+        `${userName}, that ${userGoal} isn't going to build itself.`,
+        `You know this is a distraction, ${userName}. Focus up.`,
+      ],
+      encouraging: [
+        `Hey ${userName}, let's get back to the main goal: ${userGoal}!`,
+        `A quick break is okay, ${userName}, but your goal is waiting!`,
+        `You can do it, ${userName}! Let's make some progress on ${userGoal}.`,
+      ],
+    },
+    focused: {
+      direct: [
+        `Yes, ${userName}. This is exactly what you need to be doing for ${userGoal}.`,
+        `Keep this momentum, ${userName}. This is how you win.`,
+        `Locked in. Good work, ${userName}.`,
+      ],
+      encouraging: [
+        `You're in the zone, ${userName}! This is what success looks like.`,
+        `Amazing work, ${userName}! You're crushing your goal: ${userGoal}.`,
+        `This is fantastic focus, ${userName}! Keep it up!`,
+      ],
+    },
+    neutral: {
+      direct: [`Handle this and get back to ${userGoal}, ${userName}.`],
+      encouraging: [`Quickly clear this task so you can focus on ${userGoal}, ${userName}!`],
     }
-    const categoryMessages = messages[category];
-    const randomIndex = Math.floor(Math.random() * categoryMessages.length);
-    return categoryMessages[randomIndex];
-    // TODO: Avoid repeating the same message within a 2-hour window.
+  };
+
+  // Select the appropriate template list
+  const templateList = templates[category]?.[motivationStyle] || templates.neutral.encouraging;
+  const randomTemplate = templateList[Math.floor(Math.random() * templateList.length)];
+
+  // For now, we'll use templates. Later, we can add a real AI check here.
+  // if (self.ai && self.ai.assistant) { ... }
+  
+  return { text: randomTemplate };
 }
 
 // 4. Main handler for page loads and tab switches
@@ -63,7 +103,7 @@ async function handleTabUpdate(tabId, url) {
     
     // We can decide to not show the bubble for neutral sites if we want
     // but for now, we'll show it for all categories.
-    const message = await getRandomMessage(category);
+    const message = await getAIMessage(category);
 
     // Per the spec, show the bubble 10 seconds after arrival
     // We use an alarm to handle this, as service workers can become inactive.
@@ -96,18 +136,16 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
 
     if (bubbleData) {
       const tabId = parseInt(alarm.name.split(':')[1]);
-      // Check if tab still exists
+      // Check if tab still exists and content script is ready
       try {
-        const tab = await chrome.tabs.get(tabId);
-        if (tab) {
-            chrome.tabs.sendMessage(tabId, {
-                type: 'SHOW_BUBBLE',
-                category: bubbleData.category,
-                message: bubbleData.message
-            }).catch(e => console.error("Could not send message to content script:", e));
-        }
+        await chrome.tabs.sendMessage(tabId, {
+            type: 'SHOW_BUBBLE',
+            category: bubbleData.category,
+            message: bubbleData.message
+        });
       } catch (error) {
-        console.log(`Tab ${tabId} no longer exists, skipping bubble.`);
+        // This is expected if the content script is not loaded yet, or the tab was closed.
+        console.log(`Could not send message to tab ${tabId}. It might be closed or a system page.`);
       }
       
       // Clean up the stored message data

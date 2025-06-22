@@ -1,60 +1,44 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Accountability Bubble Settings</title>
+  <meta charset="UTF-8">
+  <title>Accountability Bubble Setup</title>
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
   <div class="container">
-    <h1>Settings</h1>
-    
-    <div class="setting">
-      <label for="enable-extension">Enable Extension</label>
-      <input type="checkbox" id="enable-extension" checked>
+    <div class="header">
+      <img src="../assets/icons/icon48.png" alt="logo" class="logo">
+      <h1>Quick Setup</h1>
+      <p>Personalize your AI coach in 30 seconds.</p>
     </div>
 
-    <div class="setting">
-      <label for="message-frequency">Message Frequency</label>
-      <select id="message-frequency">
-        <option value="300000">Every 5 min</option>
-        <option value="600000">Every 10 min</option>
-        <option value="1800000">Every 30 min</option>
-      </select>
+    <div class="form-group">
+      <label for="user-name">What's your first name?</label>
+      <input type="text" id="user-name" placeholder="e.g., Alex">
     </div>
 
-    <div class="setting">
-      <label for="focus-mode">Focus Mode</label>
-      <input type="checkbox" id="focus-mode">
+    <div class="form-group">
+      <label for="user-goal">What's your main goal right now?</label>
+      <input type="text" id="user-goal" placeholder="e.g., Launch my new app">
     </div>
 
-    <div class="setting">
-      <label for="ai-messages">AI Messages (OpenAI)</label>
-      <input type="checkbox" id="ai-messages">
+    <div class="form-group">
+      <label>How should I motivate you?</label>
+      <div class="radio-group">
+        <label>
+          <input type="radio" name="motivation-style" value="encouraging" checked>
+          <span>😊 Encouraging</span>
+        </label>
+        <label>
+          <input type="radio" name="motivation-style" value="direct">
+          <span>🔥 Direct</span>
+        </label>
+      </div>
     </div>
 
-    <hr>
-
-    <h2>Custom Sites</h2>
-    <div id="custom-sites-list"></div>
-    <div class="add-site">
-      <input type="text" id="custom-site-domain" placeholder="domain.com">
-      <select id="custom-site-category">
-        <option value="focused">Focused</option>
-        <option value="distracted">Distracted</option>
-        <option value="neutral">Neutral</option>
-      </select>
-      <button id="add-site-btn">Add</button>
-    </div>
-    
-    <hr>
-
-    <h2>Stats</h2>
-    <div id="stats-dashboard">
-      <p>Daily Focus Time: <span id="focus-time">0h 0m</span></p>
-      <p>Top Distraction: <span id="top-distraction">None</span></p>
-      <p>Productivity Score: <span id="prod-score">N/A</span></p>
-    </div>
-
+    <button id="save-btn">Save & Activate</button>
+    <div id="status-message"></div>
   </div>
   <script src="popup.js"></script>
 </body>
