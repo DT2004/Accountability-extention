@@ -1,0 +1,242 @@
+{
+  "contextual_messages": {
+    "youtube": {
+      "educational_video": {
+        "focused": {
+          "encouraging": [
+            "📚 '{video_title}' looks perfect for your goal, {user_name}! Set a timer and take notes.",
+            "🎯 Great choice! This video could help with {user_goal}. Focus and absorb everything.",
+            "💡 Learning from '{channel_name}' - smart move, {user_name}! Make it count.",
+            "🚀 '{video_title}' is exactly what {user_goal} needs, {user_name}! Deep dive time.",
+            "⭐ Perfect educational content for {user_goal}! Take detailed notes, {user_name}."
+          ],
+          "direct": [
+            "💪 Good. '{video_title}' is exactly what you need for {user_goal}. Pay attention.",
+            "🔥 This is work, not entertainment, {user_name}. Take notes on '{video_title}'.",
+            "⚡ 20 minutes max on this video, then apply what you learned immediately.",
+            "💯 {channel_name} knows their stuff. Absorb this for {user_goal}, {user_name}.",
+            "🎯 Educational content detected. Make '{video_title}' count toward {user_goal}."
+          ]
+        }
+      },
+      "entertainment_video": {
+        "distracted": {
+          "encouraging": [
+            "😊 Quick brain break with '{video_title}', {user_name}? That's okay, but your goal is waiting!",
+            "🎬 Entertainment time! Just remember your real goal: {user_goal}. Back to it soon?",
+            "⏰ '{video_title}' won't help {user_goal}, but a short break is fine. Set a 10-minute limit?",
+            "🍿 {channel_name} is entertaining, but {user_goal} is your real show, {user_name}!",
+            "🎭 Quick escape with '{video_title}'? Cool! But your future self wants {user_goal} progress."
+          ],
+          "direct": [
+            "😤 '{video_title}' won't earn you your first dollar, {user_name}. Your {user_goal} will.",
+            "🛑 Stop watching '{channel_name}' and get back to building, {user_name}.",
+            "⏰ This entertainment isn't bringing you closer to {user_goal}. Redirect that energy.",
+            "💸 {channel_name} gets paid for your attention. You get paid for {user_goal}.",
+            "🚫 '{video_title}' = zero progress on {user_goal}. Do the math, {user_name}."
+          ]
+        }
+      },
+      "feed_browsing": {
+        "distracted": {
+          "encouraging": [
+            "🌊 Surfing YouTube's endless feed, {user_name}? Your goal {user_goal} needs your attention more!",
+            "📱 Quick browse break? That's human! But let's get back to {user_goal} soon.",
+            "🎯 The algorithm wants your time, but {user_goal} needs it more. Ready to refocus?",
+            "🔄 YouTube rabbit hole detected! Time to hop out and hop on {user_goal}, {user_name}.",
+            "⚡ Endless scroll = endless delay on {user_goal}. Break the cycle, {user_name}!"
+          ],
+          "direct": [
+            "😤 Stop feeding the algorithm, {user_name}. Feed your future with {user_goal} instead.",
+            "🛑 YouTube rabbit hole detected. Your {user_goal} won't build itself.",
+            "⏰ Every minute here is a minute not working on {user_goal}. Choose wisely.",
+            "💀 The algorithm is designed to steal your time. Steal it back for {user_goal}.",
+            "🎪 YouTube's circus is entertaining. Your {user_goal} circus pays better."
+          ]
+        }
+      }
+    },
+    "twitter": {
+      "social_scrolling": {
+        "distracted": {
+          "encouraging": [
+            "📱 Twitter scrolling time, {user_name}? Quick social check is normal! But {user_goal} misses you.",
+            "🐦 Checking the Twitter-verse? Fun! Just remember your real universe: {user_goal}.",
+            "⏰ Social media energy could be {user_goal} energy, {user_name}. Ready to switch?",
+            "💭 Twitter thoughts are interesting, but your {user_goal} thoughts are profitable!",
+            "🌍 Staying connected to the world? Great! Stay connected to {user_goal} too, {user_name}."
+          ],
+          "direct": [
+            "😤 Twitter scrolling won't advance {user_goal}, {user_name}. Action will.",
+            "🛑 Stop consuming other people's thoughts and start building your own through {user_goal}.",
+            "⏰ Twitter drama won't pay your bills. {user_goal} will.",
+            "💸 Twitter gets rich from your attention. You get rich from {user_goal}.",
+            "🚫 140 characters of distraction vs unlimited characters of {user_goal} progress. Choose."
+          ]
+        }
+      },
+      "specific_tweet": {
+        "distracted": {
+          "encouraging": [
+            "📖 Interesting take from {tweet_author}, {user_name}! But your {user_goal} needs your creativity more.",
+            "💭 {tweet_author}'s wisdom can wait. Your {user_goal} can't. Ready to refocus?",
+            "🎯 Good thoughts from {tweet_author}, but better thoughts come from working on {user_goal}!",
+            "✨ {tweet_author} has insights, but you have {user_goal}. That's more valuable, {user_name}!",
+            "🧠 {tweet_author}'s brain is working. Make sure yours is working on {user_goal} too!"
+          ],
+          "direct": [
+            "😤 {tweet_author}'s opinion won't build your {user_goal}, {user_name}. Your action will.",
+            "🛑 Stop consuming {tweet_author}'s content and start creating your own through {user_goal}.",
+            "⏰ 30 seconds reading {tweet_author}, 30 minutes lost from {user_goal}. Math doesn't lie.",
+            "💰 {tweet_author} won't pay your bills, {user_name}. {user_goal} will.",
+            "🚫 {tweet_author}'s tweet won't earn you your first dollar. Your {user_goal} will."
+          ]
+        }
+      }
+    },
+    "linkedin": {
+      "learning": {
+        "focused": {
+          "encouraging": [
+            "📚 LinkedIn Learning for {user_goal}? Brilliant strategy, {user_name}! Skill up and level up.",
+            "🎓 Investing in education, {user_name}! This course could be the key to {user_goal}.",
+            "💡 Smart learning choice! Apply these skills directly to {user_goal}.",
+            "🚀 Professional development for {user_goal}! This is how winners think, {user_name}.",
+            "⭐ Knowledge is power, and power builds {user_goal}. Keep learning, {user_name}!"
+          ],
+          "direct": [
+            "💪 Good. Learning = earning. This course better connect to {user_goal}, {user_name}.",
+            "🔥 Education is investment. Make sure this pays dividends for {user_goal}.",
+            "⚡ Learn fast, apply faster. Your {user_goal} needs these skills now.",
+            "💯 Professional development accepted. Now professionally develop {user_goal}.",
+            "🎯 Skills acquisition mode. Apply directly to {user_goal} immediately."
+          ]
+        }
+      },
+      "job_search": {
+        "focused": {
+          "encouraging": [
+            "🎯 Job hunting for {user_goal}, {user_name}? Every application gets you closer!",
+            "💼 Building your career path toward {user_goal}. Keep applying, keep pushing!",
+            "🚀 Each job application is a step toward {user_goal}. You've got this!",
+            "⭐ Career building mode activated! This job could unlock {user_goal}, {user_name}.",
+            "💪 Professional hustling for {user_goal}! Persistence pays, {user_name}."
+          ],
+          "direct": [
+            "💪 Job hunting is work, {user_name}. Apply strategically for roles that advance {user_goal}.",
+            "🔥 Good hustle. Every 'no' gets you closer to the 'yes' that unlocks {user_goal}.",
+            "⚡ Apply with purpose, {user_name}. Target roles that serve {user_goal}.",
+            "💯 Professional networking accepted. Make it count for {user_goal}.",
+            "🎯 Job search = {user_goal} search. Stay focused on the end game."
+          ]
+        }
+      },
+      "feed_scrolling": {
+        "distracted": {
+          "encouraging": [
+            "📱 LinkedIn scrolling, {user_name}? Some networking is good, but {user_goal} needs building time!",
+            "💼 Professional procrastination is still procrastination, {user_name}. Back to {user_goal}?",
+            "🎯 LinkedIn feed or {user_goal} progress? I know which one pays better!",
+            "⚡ Professional inspiration is nice, but {user_goal} perspiration is nicer, {user_name}!",
+            "🌟 LinkedIn success stories are motivating. Your {user_goal} success story is better!"
+          ],
+          "direct": [
+            "😤 Professional scrolling won't build {user_goal}, {user_name}. Professional doing will.",
+            "🛑 Stop watching others' success and start building your own through {user_goal}.",
+            "⏰ LinkedIn motivation posts won't motivate you like achieving {user_goal} will.",
+            "💸 LinkedIn gets engagement. You get {user_goal} progress. Choose wisely.",
+            "🚫 Professional networking feed = amateur time wasting. Focus on {user_goal}."
+          ]
+        }
+      }
+    },
+    "ai_chat": {
+      "work_related": {
+        "focused": {
+          "encouraging": [
+            "🤖 Using AI to boost {user_goal}, {user_name}? Smart strategy! Get the help you need.",
+            "💡 AI assistance for {user_goal}? Perfect! Use this tool to accelerate your progress.",
+            "🚀 Leveraging AI for {user_goal} is next-level thinking, {user_name}. Keep innovating!",
+            "⭐ AI + human intelligence = {user_goal} success! Smart collaboration, {user_name}.",
+            "🔥 AI-powered productivity for {user_goal}! This is how the future works, {user_name}."
+          ],
+          "direct": [
+            "💪 Good. Use AI as a tool, not a crutch for {user_goal}, {user_name}.",
+            "🔥 Smart move. AI + your skills = {user_goal} achievement. Keep pushing.",
+            "⚡ AI assistance accepted. Now apply these insights to {user_goal} immediately.",
+            "💯 AI collaboration for {user_goal}. Make every query count, {user_name}.",
+            "🎯 AI is your co-pilot for {user_goal}. Stay in the driver's seat."
+          ]
+        }
+      },
+      "casual_chat": {
+        "distracted": {
+          "encouraging": [
+            "🤖 Fun AI chat, {user_name}? Technology is fascinating! But {user_goal} needs your genius more.",
+            "💭 Exploring AI capabilities? Cool! Now explore your own capabilities with {user_goal}.",
+            "🎯 AI conversations are interesting, but {user_goal} conversations pay better!",
+            "✨ AI entertainment is fun, but {user_goal} achievement is fulfilling, {user_name}!",
+            "🌟 Chatting with AI about life? Life is better when you're building {user_goal}!"
+          ],
+          "direct": [
+            "😤 Chatting with AI for fun won't advance {user_goal}, {user_name}. Chat with purpose.",
+            "🛑 Stop entertaining the AI and start working on what entertains you: {user_goal}.",
+            "⏰ AI doesn't need entertainment, {user_name}. Your future needs {user_goal}.",
+            "💸 AI gets training data. You get {user_goal} progress. Trade wisely.",
+            "🚫 Casual AI chat = casual progress on {user_goal}. Be intentional."
+          ]
+        }
+      }
+    }
+  },
+  "fallback_messages": {
+    "focused": {
+      "encouraging": [
+        "🔥 You're in the zone working on {user_goal}, {user_name}! This is what success looks like.",
+        "🚀 Locked in and building {user_goal}. Beautiful momentum, {user_name}!",
+        "⚡ Deep work mode for {user_goal} activated. You're crushing it, {user_name}!",
+        "💪 Focus beast mode enabled! {user_goal} is getting the attention it deserves, {user_name}.",
+        "🎯 Perfect concentration on {user_goal}! This is how dreams become reality."
+      ],
+      "direct": [
+        "💪 Good. This is exactly what you need to be doing for {user_goal}, {user_name}.",
+        "🔥 Keep this intensity, {user_name}. This is how {user_goal} gets built.",
+        "⚡ Locked in. No distractions. Just {user_goal} progress. Perfect.",
+        "💯 Focus level: maximum. {user_goal} progress: accelerating. Continue, {user_name}.",
+        "🎯 This is work. Real work. {user_goal} work. Don't stop now."
+      ]
+    },
+    "distracted": {
+      "encouraging": [
+        "😊 Quick break from {user_goal}, {user_name}? That's human! Ready to get back to building?",
+        "🎯 I get it, {user_name}. Breaks happen. But {user_goal} is waiting for your return!",
+        "⏰ Mental reset time? Okay! But your {user_goal} energy is calling you back.",
+        "🌟 Quick distraction detected! No judgment, {user_name}. Just redirect to {user_goal} when ready.",
+        "💫 Brain break acknowledged! Now let's give that refreshed brain to {user_goal}."
+      ],
+      "direct": [
+        "😤 This isn't moving you toward {user_goal}, {user_name}. Redirect that energy.",
+        "🛑 Stop the distraction spiral and get back to {user_goal}, {user_name}.",
+        "⏰ Every minute here is a minute stolen from {user_goal}. Make it count.",
+        "💸 Distraction time = money lost on {user_goal}. Calculate the cost, {user_name}.",
+        "🚫 This activity has zero ROI for {user_goal}. Invest your time better."
+      ]
+    },
+    "neutral": {
+      "encouraging": [
+        "⚡ Handle this quickly and smoothly, {user_name}, then back to the main mission: {user_goal}!",
+        "🎯 Necessary task time! Clear this efficiently so you can focus on {user_goal}.",
+        "⏱️ Quick admin work, then back to building {user_goal}, {user_name}?",
+        "🔄 Maintenance mode activated! Handle this and return to {user_goal} creation.",
+        "✅ Necessary evil detected. Process quickly and get back to {user_goal} magic!"
+      ],
+      "direct": [
+        "💪 Handle this fast and get back to {user_goal}, {user_name}.",
+        "🔥 Necessary evil. Do it quick, do it right, then {user_goal} time.",
+        "⚡ Time-box this task and return to what matters: {user_goal}.",
+        "💯 Admin work acknowledged. 15 minutes max, then {user_goal} focus.",
+        "🎯 Process this efficiently. {user_goal} is the real priority."
+      ]
+    }
+  }
+} 

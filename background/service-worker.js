@@ -108,7 +108,7 @@ async function handleTabUpdate(tabId, url) {
     // Per the spec, show the bubble 10 seconds after arrival
     // We use an alarm to handle this, as service workers can become inactive.
     const alarmName = `showBubble:${tabId}:${Date.now()}`; // Unique alarm name
-    chrome.alarms.create(alarmName, { delayInMinutes: 10 / 60 });
+    chrome.alarms.create(alarmName, { delayInMinutes: 10 / 60 / 60 }); // 10 seconds (10/60/60 = 10/3600 = ~0.0028 minutes)
     // Store the message to be shown when the alarm fires.
     await setStorageData({ [alarmName]: { category, message } });
 }
@@ -136,16 +136,26 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
 
     if (bubbleData) {
       const tabId = parseInt(alarm.name.split(':')[1]);
-      // Check if tab still exists and content script is ready
+      
+      // First check if the tab still exists
       try {
+        const tab = await chrome.tabs.get(tabId);
+        
+        // Only try to send message if tab exists and is a valid web page
+        if (tab && tab.url && tab.url.startsWith('http')) {
         await chrome.tabs.sendMessage(tabId, {
             type: 'SHOW_BUBBLE',
             category: bubbleData.category,
             message: bubbleData.message
         });
+        } else {
+          console.log(`Tab ${tabId} is not a valid web page, skipping bubble.`);
+        }
       } catch (error) {
-        // This is expected if the content script is not loaded yet, or the tab was closed.
+        // Only log if it's not a "tab not found" error (which is expected)
+        if (!error.message.includes('Could not establish connection')) {
         console.log(`Could not send message to tab ${tabId}. It might be closed or a system page.`);
+        }
       }
       
       // Clean up the stored message data
