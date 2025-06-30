@@ -25,7 +25,10 @@ export const defaultSettings = {
   smartMessages: true, // Enable smart contextual messages
   userName: null,
   userGoal: null,
-  motivationStyle: 'encouraging'
+  motivationStyle: 'encouraging',
+  dailyTasks: [], // Array of daily task objects
+  currentTaskId: null, // ID of the task user is currently working on
+  lastUpdated: null
 };
 
 export const defaultStats = {

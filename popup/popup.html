@@ -9,37 +9,71 @@
   <div class="container">
     <div class="header">
       <img src="../assets/icons/icon48.png" alt="logo" class="logo">
-      <h1>Quick Setup</h1>
-      <p>Personalize your AI coach in 30 seconds.</p>
+      <h1>AI Coach Setup</h1>
+      <p>Personalize your accountability coach.</p>
     </div>
 
-    <div class="form-group">
-      <label for="user-name">What's your first name?</label>
-      <input type="text" id="user-name" placeholder="e.g., Alex">
-    </div>
+    <!-- Goal Setup Section -->
+    <div class="section-card">
+      <h3>Your Main Goal</h3>
+      <div class="form-group">
+        <label for="user-name">What's your first name?</label>
+        <input type="text" id="user-name" placeholder="e.g., Alex">
+      </div>
 
-    <div class="form-group">
-      <label for="user-goal">What's your main goal right now?</label>
-      <input type="text" id="user-goal" placeholder="e.g., Launch my new app">
-    </div>
+      <div class="form-group">
+        <label for="user-goal">What's your main goal right now?</label>
+        <input type="text" id="user-goal" placeholder="e.g., Launch my SaaS app">
+      </div>
 
-    <div class="form-group">
-      <label>How should I motivate you?</label>
-      <div class="radio-group">
-        <label>
-          <input type="radio" name="motivation-style" value="encouraging" checked>
-          <span>😊 Encouraging</span>
-        </label>
-        <label>
-          <input type="radio" name="motivation-style" value="direct">
-          <span>🔥 Direct</span>
-        </label>
+      <div class="form-group">
+        <label>How should I motivate you?</label>
+        <div class="radio-group">
+          <label>
+            <input type="radio" name="motivation-style" value="encouraging" checked>
+            <span>😊 Encouraging</span>
+          </label>
+          <label>
+            <input type="radio" name="motivation-style" value="direct">
+            <span>🔥 Direct</span>
+          </label>
+        </div>
       </div>
     </div>
 
-    <button id="save-btn">Save & Activate</button>
+    <!-- Daily Tasks Section -->
+    <div class="section-card">
+      <h3>Today's Tasks</h3>
+      <p class="section-subtitle">What specific tasks will help you achieve your goal today?</p>
+      
+      <div class="daily-tasks-container">
+        <div id="tasks-list">
+          <!-- Tasks will be added here dynamically -->
+        </div>
+        
+        <div class="add-task-section">
+          <input type="text" id="new-task-input" placeholder="e.g., Finish authentication system" maxlength="100">
+          <button id="add-task-btn" type="button">+ Add Task</button>
+        </div>
+      </div>
+
+      <!-- Current Task Selection -->
+      <div class="current-task-section">
+        <label for="current-task-select">What are you working on right now?</label>
+        <select id="current-task-select">
+          <option value="">Select current task...</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+      <button id="save-btn">Save & Activate</button>
+      <button id="reset-btn" type="button" class="secondary-btn">Reset All</button>
+    </div>
+    
     <div id="status-message"></div>
   </div>
   <script src="popup.js"></script>
 </body>
-</html> 
+</html>

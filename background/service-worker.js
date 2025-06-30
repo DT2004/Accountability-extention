@@ -1,4 +1,4 @@
-// Enhanced background/service-worker.js - Smart Context-Aware Service Worker
+// Safe Hybrid background/service-worker.js - Adds Task Awareness Without Breaking Existing
 
 import { initializeStorage, getStorageData, setStorageData } from './storage.js';
 
@@ -75,10 +75,10 @@ async function getSiteCategory(hostname, context = null) {
   return 'neutral';
 }
 
-// 4. Smart contextual message generation
+// 4. ENHANCED Smart contextual message generation WITH TASK AWARENESS
 async function getSmartMessage(context, category) {
   const { settings } = await getStorageData(['settings']);
-  const { userName, userGoal, motivationStyle } = settings || {};
+  const { userName, userGoal, motivationStyle, dailyTasks, currentTaskId } = settings || {};
 
   // If user hasn't completed setup, return setup message
   if (!userName || !userGoal) {
@@ -91,22 +91,32 @@ async function getSmartMessage(context, category) {
   let selectedMessage = null;
 
   try {
-    // Try to get contextual message first
-    if (context && smartMessages?.contextual_messages) {
+    // NEW: Try task-aware message first if we have a current task and context
+    if (currentTaskId && context && dailyTasks?.length > 0) {
+      const currentTask = dailyTasks.find(task => task.id === currentTaskId);
+      if (currentTask) {
+        selectedMessage = getTaskAwareMessage(context, category, currentTask, {
+          userName, userGoal, motivationStyle
+        });
+      }
+    }
+
+    // EXISTING: Try to get contextual message from smart-messages.json
+    if (!selectedMessage && context && smartMessages?.contextual_messages) {
       selectedMessage = getContextualMessage(context, category, motivationStyle);
     }
 
-    // Fallback to general smart messages
+    // EXISTING: Fallback to general smart messages
     if (!selectedMessage && smartMessages?.fallback_messages) {
       selectedMessage = getFallbackMessage(category, motivationStyle);
     }
 
-    // Final fallback to basic templates
+    // EXISTING: Final fallback to basic templates
     if (!selectedMessage) {
       selectedMessage = getBasicMessage(category, motivationStyle, userName, userGoal);
     }
 
-    // Perform template substitution
+    // EXISTING: Perform template substitution
     if (selectedMessage) {
       selectedMessage.text = performTemplateSubstitution(
         selectedMessage.text, 
@@ -124,7 +134,122 @@ async function getSmartMessage(context, category) {
   return selectedMessage || { text: `Stay focused on ${userGoal}, ${userName}!` };
 }
 
-// 5. Get contextual message based on platform and activity
+// 5. NEW: Task-aware message generation
+function getTaskAwareMessage(context, category, currentTask, userProfile) {
+  const { userName, motivationStyle } = userProfile;
+  const contentTitle = context.data?.video_title || context.data?.tweet_text || context.data?.channel_name || 'this content';
+  const taskText = currentTask.text;
+  
+  // Analyze if current content helps the current task
+  const taskRelevance = analyzeTaskRelevance(context, currentTask);
+  
+  if (taskRelevance.isRelevant) {
+    // Content is relevant to current task
+    const templates = {
+      encouraging: [
+        `🎯 Perfect, ${userName}! "${contentTitle}" looks directly relevant to "${taskText}". Take detailed notes!`,
+        `🚀 Great choice! This content could really help with "${taskText}". Focus and absorb everything, ${userName}!`,
+        `💡 Smart research, ${userName}! "${contentTitle}" is exactly what "${taskText}" needs. Make it count!`,
+        `⭐ Excellent! This aligns perfectly with your task: "${taskText}". You're being strategic, ${userName}!`
+      ],
+      direct: [
+        `💪 Good. "${contentTitle}" is exactly what you need for "${taskText}". Pay attention, ${userName}.`,
+        `🎯 This is work. "${contentTitle}" directly supports "${taskText}". Take notes and apply immediately.`,
+        `⚡ Smart choice. "${contentTitle}" will help you finish "${taskText}". Stay focused, ${userName}.`,
+        `💯 Relevant content detected. "${contentTitle}" serves "${taskText}". Make it count.`
+      ]
+    };
+    
+    const styleTemplates = templates[motivationStyle] || templates.encouraging;
+    const randomTemplate = styleTemplates[Math.floor(Math.random() * styleTemplates.length)];
+    
+    return {
+      text: randomTemplate,
+      taskRelevance: taskRelevance,
+      messageType: 'task_relevant'
+    };
+  } else {
+    // Content is not relevant to current task
+    const templates = {
+      encouraging: [
+        `😊 Quick break from "${taskText}", ${userName}? That's okay! But remember your real mission today.`,
+        `🎯 I see you watching "${contentTitle}". Fun break! But "${taskText}" is still waiting for you.`,
+        `⏰ "${contentTitle}" looks interesting, but will it help you finish "${taskText}" today, ${userName}?`,
+        `🌟 Mental break time? Cool! Just remember: "${taskText}" needs your genius more than this content does.`
+      ],
+      direct: [
+        `😤 "${contentTitle}" won't finish "${taskText}", ${userName}. Your deadline won't wait.`,
+        `🛑 Stop watching "${contentTitle}" and get back to "${taskText}". Priority check needed.`,
+        `⏰ Every minute on "${contentTitle}" is a minute stolen from "${taskText}". Do the math, ${userName}.`,
+        `💸 "${contentTitle}" entertainment vs "${taskText}" progress. Which pays better?`
+      ]
+    };
+    
+    const styleTemplates = templates[motivationStyle] || templates.encouraging;
+    const randomTemplate = styleTemplates[Math.floor(Math.random() * styleTemplates.length)];
+    
+    return {
+      text: randomTemplate,
+      taskRelevance: taskRelevance,
+      messageType: 'task_distraction'
+    };
+  }
+}
+
+// 6. NEW: Analyze if content is relevant to current task
+function analyzeTaskRelevance(context, currentTask) {
+  const taskText = currentTask.text.toLowerCase();
+  const contentTitle = context.data?.video_title || context.data?.tweet_text || '';
+  const contentTitleLower = contentTitle.toLowerCase();
+  
+  // Extract key terms from task
+  const taskKeywords = extractKeywords(taskText);
+  const contentKeywords = extractKeywords(contentTitleLower);
+  
+  // Calculate relevance score
+  let relevanceScore = 0;
+  let matchedKeywords = [];
+  
+  taskKeywords.forEach(keyword => {
+    if (contentKeywords.some(contentKeyword => 
+        contentKeyword.includes(keyword) || keyword.includes(contentKeyword)
+    )) {
+      relevanceScore += 1;
+      matchedKeywords.push(keyword);
+    }
+  });
+  
+  // Boost score for certain contexts
+  if (context.platform === 'github' && taskText.includes('code')) relevanceScore += 2;
+  if (context.platform === 'stackoverflow' && taskText.includes('debug')) relevanceScore += 2;
+  if (context.activity === 'educational_video' && taskText.includes('learn')) relevanceScore += 1;
+  
+  const isRelevant = relevanceScore >= 1; // At least one keyword match
+  const confidence = Math.min(relevanceScore / Math.max(taskKeywords.length, 1), 1);
+  
+  return {
+    isRelevant,
+    relevanceScore,
+    confidence,
+    matchedKeywords,
+    reasoning: isRelevant 
+      ? `Matches: ${matchedKeywords.join(', ')}` 
+      : 'No clear connection to current task'
+  };
+}
+
+// 7. NEW: Extract keywords from text
+function extractKeywords(text) {
+  const stopWords = ['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'is', 'are', 'was', 'were', 'be', 'been', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'should', 'could', 'can', 'my', 'your', 'his', 'her', 'its', 'our', 'their'];
+  
+  return text
+    .split(/\s+/)
+    .map(word => word.replace(/[^\w]/g, '').toLowerCase())
+    .filter(word => word.length > 2 && !stopWords.includes(word))
+    .filter(word => word); // Remove empty strings
+}
+
+// 8. EXISTING: Get contextual message based on platform and activity
 function getContextualMessage(context, category, motivationStyle) {
   const { platform, activity, data } = context;
   
@@ -146,7 +271,7 @@ function getContextualMessage(context, category, motivationStyle) {
   return { text: styleMessages[randomIndex] };
 }
 
-// 6. Get fallback message when contextual fails
+// 9. EXISTING: Get fallback message when contextual fails
 function getFallbackMessage(category, motivationStyle) {
   const fallbackMessages = smartMessages.fallback_messages?.[category]?.[motivationStyle];
   
@@ -158,7 +283,7 @@ function getFallbackMessage(category, motivationStyle) {
   return { text: fallbackMessages[randomIndex] };
 }
 
-// 7. Basic message templates (final fallback)
+// 10. EXISTING: Basic message templates (final fallback)
 function getBasicMessage(category, motivationStyle, userName, userGoal) {
   const basicTemplates = {
     focused: {
@@ -204,7 +329,7 @@ function getBasicMessage(category, motivationStyle, userName, userGoal) {
   return { text: templates[randomIndex] };
 }
 
-// 8. Template substitution with context variables
+// 11. EXISTING: Template substitution with context variables
 function performTemplateSubstitution(template, userName, userGoal, context) {
   let result = template;
 
@@ -228,7 +353,7 @@ function performTemplateSubstitution(template, userName, userGoal, context) {
   return result;
 }
 
-// 9. Enhanced context handling
+// 12. EXISTING: Enhanced context handling
 chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
   console.log('Background received message:', request.type);
 
@@ -254,7 +379,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
   }
 });
 
-// 10. Handle context updates and decide when to show bubble
+// 13. EXISTING: Handle context updates and decide when to show bubble
 async function handleContextUpdate(tabId, context) {
   const { settings } = await getStorageData(['settings']);
   
@@ -268,7 +393,7 @@ async function handleContextUpdate(tabId, context) {
   
   console.log(`Context processed: ${context.platform}/${context.activity} -> ${category}`);
   
-  // Generate smart message
+  // Generate smart message (now with task awareness!)
   const message = await getSmartMessage(context, category);
   
   // Create alarm to show bubble after delay
@@ -298,7 +423,7 @@ async function handleContextUpdate(tabId, context) {
   console.log(`Smart bubble scheduled for tab ${tabId} in ${delaySeconds} seconds`);
 }
 
-// 11. Enhanced alarm handling for smart bubbles
+// 14. EXISTING: Enhanced alarm handling for smart bubbles
 chrome.alarms.onAlarm.addListener(async (alarm) => {
   if (alarm.name.startsWith('smartBubble:')) {
     const { [alarm.name]: bubbleData } = await getStorageData([alarm.name]);
@@ -373,13 +498,13 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
   }
 });
 
-// 12. Clean up contexts when tabs are closed
+// 15. EXISTING: Clean up contexts when tabs are closed
 chrome.tabs.onRemoved.addListener((tabId) => {
   activeContexts.delete(tabId);
   console.log(`Cleaned up context for closed tab ${tabId}`);
 });
 
-// 13. Handle tab URL changes
+// 16. EXISTING: Handle tab URL changes
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (changeInfo.url) {
     // URL changed, clear old context
@@ -388,14 +513,14 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   }
 });
 
-// 14. Initialize smart messages on startup
+// 17. EXISTING: Initialize smart messages on startup
 (async () => {
   if (!smartMessages) {
     await loadSmartMessages();
   }
 })();
 
-// 4. Main handler for page loads and tab switches (legacy support)
+// EXISTING: Legacy support - Main handler for page loads and tab switches
 async function handleTabUpdate(tabId, url) {
     if (!url || !url.startsWith('http')) {
         return; // Ignore internal chrome://, file://, etc. URLs
@@ -422,7 +547,7 @@ async function handleTabUpdate(tabId, url) {
     await setStorageData({ [alarmName]: { category, message } });
 }
 
-// 5. Legacy message generation
+// EXISTING: Legacy message generation
 async function getAIMessage(category) {
   const { settings } = await getStorageData(['settings']);
   const { userName, userGoal, motivationStyle } = settings || {};
@@ -474,7 +599,7 @@ async function getAIMessage(category) {
   return { text: randomTemplate };
 }
 
-// Listen for tab updates (e.g., new URL)
+// EXISTING: Listen for tab updates (e.g., new URL)
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   // We only want to trigger on the final page load, and for the active tab
   if (changeInfo.status === 'complete' && tab.active) {
@@ -482,7 +607,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   }
 });
 
-// Listen for tab activation changes (e.g., switching tabs)
+// EXISTING: Listen for tab activation changes (e.g., switching tabs)
 chrome.tabs.onActivated.addListener(async (activeInfo) => {
     const tab = await chrome.tabs.get(activeInfo.tabId);
     if (tab && tab.status === 'complete' && tab.url) {
