@@ -297,3 +297,69 @@ input[type="text"]:focus, select:focus {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--label-color);
 }
+
+.accountability-popup {
+  font-family: 'Inter', sans-serif;
+  background: rgba(30, 30, 30, 0.95);
+  color: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 32px rgba(0,0,0,0.4);
+  padding: 32px 32px 24px 32px;
+  width: 400px;
+  max-width: 90vw;
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 99999;
+  text-align: center;
+}
+
+.popup-icon {
+  margin-bottom: 20px;
+}
+
+.popup-message {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.popup-subtext {
+  font-size: 1rem;
+  color: #d1cfcf;
+  margin-bottom: 24px;
+}
+
+.popup-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.popup-btn {
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 500;
+  padding: 10px 28px;
+  border-radius: 8px;
+  border: none;
+  background: #232323;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.popup-btn.back {
+  background: #ffe9a7;
+  color: #232323;
+  font-weight: 600;
+}
+
+.popup-btn:hover {
+  background: #444;
+}
+
+.popup-btn.back:hover {
+  background: #ffd700;
+}
