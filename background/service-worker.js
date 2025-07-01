@@ -353,7 +353,7 @@ function performTemplateSubstitution(template, userName, userGoal, context) {
   return result;
 }
 
-// 12. EXISTING: Enhanced context handling
+// 12. ENHANCED: Context handling + Usage Pattern Warnings
 chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
   console.log('Background received message:', request.type);
 
@@ -376,6 +376,40 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
   if (request.type === 'CONTENT_SCRIPT_LOADED') {
     console.log(`Content script loaded for: ${request.host}`);
     sendResponse({ status: 'Background acknowledged content script' });
+  }
+
+  // NEW: Handle usage pattern warnings
+  if (request.type === 'USAGE_PATTERN_WARNING') {
+    const { hostname, patterns, visitCount, totalTimeMinutes } = request;
+    const tabId = sender.tab?.id;
+    
+    if (tabId) {
+      console.log(`Usage pattern warning for ${hostname}:`, patterns);
+      await handleUsagePatternWarning(tabId, hostname, patterns, visitCount, totalTimeMinutes);
+    }
+    
+    sendResponse({ status: 'Usage pattern warning processed' });
+  }
+
+  // NEW: Handle site visit recording
+  if (request.type === 'SITE_VISIT_RECORDED') {
+    const { hostname, visitCount } = request;
+    console.log(`Visit #${visitCount} recorded for ${hostname}`);
+    
+    // Store for analytics (optional)
+    await trackSiteVisit(hostname, visitCount);
+    
+    sendResponse({ status: 'Site visit recorded' });
+  }
+
+  // TEST: Handle test communication
+  if (request.type === 'TEST_COMMUNICATION') {
+    console.log('🧪 Background script received test message:', request.message);
+    sendResponse({ 
+      status: 'Background script is working!',
+      received: request.message,
+      timestamp: Date.now()
+    });
   }
 });
 
@@ -423,8 +457,39 @@ async function handleContextUpdate(tabId, context) {
   console.log(`Smart bubble scheduled for tab ${tabId} in ${delaySeconds} seconds`);
 }
 
-// 14. EXISTING: Enhanced alarm handling for smart bubbles
+// 14. ENHANCED: Alarm handling for both smart bubbles AND usage warnings
 chrome.alarms.onAlarm.addListener(async (alarm) => {
+  // Handle usage warnings
+  if (alarm.name.startsWith('usageWarning:')) {
+    const { [alarm.name]: warningData } = await getStorageData([alarm.name]);
+
+    if (warningData) {
+      const { tabId, category, message, context } = warningData;
+      
+      try {
+        const tab = await chrome.tabs.get(tabId);
+        
+        if (tab && tab.url && tab.url.startsWith('http')) {
+          await chrome.tabs.sendMessage(tabId, {
+            type: 'SHOW_USAGE_WARNING',
+            category: category,
+            message: message,
+            context: context,
+            isUrgent: true
+          });
+          
+          console.log(`Usage warning shown for ${context.data.hostname}`);
+        }
+      } catch (error) {
+        console.log(`Could not show usage warning for tab ${tabId}:`, error.message);
+      }
+      
+      // Clean up stored data
+      chrome.storage.local.remove([alarm.name]);
+    }
+  }
+
+  // Handle smart bubbles
   if (alarm.name.startsWith('smartBubble:')) {
     const { [alarm.name]: bubbleData } = await getStorageData([alarm.name]);
 
@@ -513,12 +578,123 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   }
 });
 
-// 17. EXISTING: Initialize smart messages on startup
-(async () => {
-  if (!smartMessages) {
-    await loadSmartMessages();
+// 18. NEW: Handle Usage Pattern Warnings
+async function handleUsagePatternWarning(tabId, hostname, patterns, visitCount, totalTimeMinutes) {
+  const { settings } = await getStorageData(['settings']);
+  
+  if (!settings || !settings.enabled) {
+    console.log('Extension disabled, not processing usage warning');
+    return;
   }
-})();
+
+  const { userName, userGoal, motivationStyle, currentTaskId, dailyTasks } = settings;
+  
+  // Get current task for context
+  const currentTask = dailyTasks?.find(task => task.id === currentTaskId);
+  const taskText = currentTask?.text || userGoal;
+
+  // Generate usage pattern warning message
+  const warningMessage = generateUsageWarningMessage(
+    patterns, 
+    hostname, 
+    visitCount, 
+    totalTimeMinutes,
+    { userName, taskText, motivationStyle }
+  );
+
+  // Show warning bubble immediately (override normal delay)
+  const alarmName = `usageWarning:${tabId}:${Date.now()}`;
+  chrome.alarms.create(alarmName, { delayInMinutes: 0.05 }); // 3 seconds
+
+  // Store the warning message
+  await setStorageData({ 
+    [alarmName]: { 
+      category: 'distracted',
+      message: warningMessage,
+      context: { 
+        platform: 'usage_warning',
+        activity: patterns.warningType,
+        data: { hostname, visitCount, totalTimeMinutes }
+      },
+      tabId,
+      isUsageWarning: true
+    } 
+  });
+  
+  console.log(`Usage warning scheduled for ${hostname}: ${patterns.message}`);
+}
+
+// 19. NEW: Generate Usage Warning Messages
+function generateUsageWarningMessage(patterns, hostname, visitCount, totalTimeMinutes, userProfile) {
+  const { userName, taskText, motivationStyle } = userProfile;
+  const { warningType, severity, message } = patterns;
+  
+  // Base pattern message from tracker
+  let warningText = message;
+  
+  // Add task-specific context
+  if (taskText && taskText !== 'undefined') {
+    const taskContextMessages = {
+      encouraging: [
+        `${warningText} Remember, you wanted to focus on "${taskText}" today, ${userName}.`,
+        `${warningText} Your task "${taskText}" needs your attention more than this does.`,
+        `${warningText} Quick check: is this helping you with "${taskText}", ${userName}?`
+      ],
+      direct: [
+        `${warningText} "${taskText}" won't finish itself, ${userName}.`,
+        `${warningText} Every minute here is a minute stolen from "${taskText}".`,
+        `${warningText} Time check: "${taskText}" is still 0% complete.`
+      ]
+    };
+    
+    const templates = taskContextMessages[motivationStyle] || taskContextMessages.encouraging;
+    warningText = templates[Math.floor(Math.random() * templates.length)];
+  }
+  
+  // Add severity-based action suggestions
+  const actionSuggestions = {
+    medium: {
+      encouraging: [` Ready to refocus?`, ` Time to redirect that energy?`, ` Shall we get back on track?`],
+      direct: [` Focus up.`, ` Redirect now.`, ` Get back to work.`]
+    },
+    high: {
+      encouraging: [` Maybe time for a break from this site?`, ` Consider a digital detox?`, ` Your future self will thank you for stopping now.`],
+      direct: [` Stop the spiral. Act now.`, ` This is a problem. Fix it.`, ` Enough. Choose better.`]
+    },
+    critical: {
+      encouraging: [` This pattern is concerning, ${userName}. You're better than this.`, ` Time for some serious self-reflection.`],
+      direct: [` This is addiction-level behavior, ${userName}. Wake up.`, ` Your goals are dying while you scroll.`]
+    }
+  };
+  
+  const suggestions = actionSuggestions[severity]?.[motivationStyle] || actionSuggestions.medium.encouraging;
+  const suggestion = suggestions[Math.floor(Math.random() * suggestions.length)];
+  
+  return {
+    text: warningText + suggestion,
+    warningType,
+    severity,
+    actionable: true
+  };
+}
+
+// 20. NEW: Track Site Visits for Analytics
+async function trackSiteVisit(hostname, visitCount) {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const visitKey = `siteVisits:${today}`;
+    
+    const { [visitKey]: existingVisits } = await getStorageData([visitKey]);
+    const todaysVisits = existingVisits || {};
+    
+    todaysVisits[hostname] = visitCount;
+    
+    await setStorageData({ [visitKey]: todaysVisits });
+    console.log(`Tracked visit #${visitCount} to ${hostname}`);
+  } catch (error) {
+    console.log('Error tracking site visit:', error);
+  }
+}
 
 // EXISTING: Legacy support - Main handler for page loads and tab switches
 async function handleTabUpdate(tabId, url) {

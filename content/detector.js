@@ -9,6 +9,8 @@ class ContentDetector {
       this.platform = this.detectPlatform();
       this.lastContext = null;
       this.observer = null;
+      this.detectionTimeout = null;
+      this.extensionContextValid = true;
       this.init();
     }
   
@@ -18,6 +20,9 @@ class ContentDetector {
       // Send basic message that service worker expects
       this.sendBasicMessage();
       
+      // Test communication with background script
+      this.testCommunication();
+      
       // Initial context detection
       this.detectAndSendContext();
       
@@ -26,6 +31,9 @@ class ContentDetector {
       
       // Re-detect context on URL changes (for SPAs)
       this.setupURLChangeListener();
+      
+      // Set up context invalidation listener
+      this.setupContextInvalidationListener();
     }
   
     detectPlatform() {
@@ -402,10 +410,39 @@ class ContentDetector {
       );
     }
   
+    // Helper method to safely send messages to background
+    async sendMessageToBackground(messageData) {
+      // Use global message sender if available, otherwise fall back to local method
+      if (window.extensionMessageSender) {
+        return await window.extensionMessageSender.sendMessage(messageData);
+      }
+      
+      // Fallback local method
+      if (!this.extensionContextValid) {
+        console.log('Extension context invalid, skipping message send');
+        return false;
+      }
+
+      try {
+        await chrome.runtime.sendMessage(messageData);
+        return true;
+      } catch (error) {
+        if (error.message.includes('Extension context invalidated')) {
+          console.log('Extension context invalidated, stopping message sending');
+          this.extensionContextValid = false;
+          this.cleanup();
+          return false;
+        } else {
+          console.log('Error sending message to background:', error);
+          return false;
+        }
+      }
+    }
+  
     sendContextToBackground(context) {
       console.log('Sending context to background:', context);
       
-      chrome.runtime.sendMessage({
+      this.sendMessageToBackground({
         type: 'CONTEXT_DETECTED',
         context: context,
         timestamp: Date.now()
@@ -414,7 +451,7 @@ class ContentDetector {
   
     // Also send the basic message that the service worker expects
     sendBasicMessage() {
-      chrome.runtime.sendMessage({
+      this.sendMessageToBackground({
         type: 'CONTENT_SCRIPT_LOADED',
         host: window.location.hostname
       });
@@ -469,17 +506,72 @@ class ContentDetector {
       }
       clearTimeout(this.detectionTimeout);
     }
+  
+    // Cleanup method for when extension context becomes invalid
+    cleanup() {
+      if (this.observer) {
+        this.observer.disconnect();
+        this.observer = null;
+      }
+      if (this.detectionTimeout) {
+        clearTimeout(this.detectionTimeout);
+        this.detectionTimeout = null;
+      }
+      console.log('Content detector cleaned up due to extension context invalidation');
+    }
+  
+    // Send analysis results to background script
+    async sendPageContext() {
+      try {
+        const context = await this.analyzePageContent();
+        
+        this.sendMessageToBackground({
+          type: 'SMART_CONTENT_DETECTED',
+          context: context,
+          timestamp: Date.now()
+        });
+        
+        console.log('Smart content analysis:', context);
+      } catch (error) {
+        console.log('Error in smart content analysis:', error);
+        
+        // Fallback to basic detection
+        this.sendMessageToBackground({
+          type: 'CONTENT_SCRIPT_LOADED',
+          host: window.location.hostname
+        });
+      }
+    }
+  
+    // Test communication with background script
+    testCommunication() {
+      console.log('🧪 Testing communication with background script...');
+      this.sendMessageToBackground({
+        type: 'TEST_COMMUNICATION',
+        message: 'Content script is working!',
+        timestamp: Date.now()
+      }).then(response => {
+        console.log('✅ Background script responded:', response);
+      }).catch(error => {
+        console.log('❌ Communication failed:', error);
+      });
+    }
+  
+    setupContextInvalidationListener() {
+      document.addEventListener('extensionContextInvalidated', () => {
+        this.extensionContextValid = false;
+        this.cleanup();
+      });
+    }
   }
   
   // Initialize content detector
   const contentDetector = new ContentDetector();
   
   // Send initial message to background to indicate content script loaded
-  chrome.runtime.sendMessage({ 
+  contentDetector.sendMessageToBackground({ 
     type: 'CONTENT_SCRIPT_LOADED', 
     host: window.location.hostname 
-  }).catch(error => {
-    console.log('Could not send content script loaded message:', error);
   });
   
   // Cleanup on page unload

@@ -8,6 +8,7 @@ class EnhancedIntelligentBubble {
     this.hideTimer = null;
     this.currentContext = null;
     this.messageHistory = [];
+    this.extensionContextValid = true;
     this.init();
   }
 
@@ -15,6 +16,7 @@ class EnhancedIntelligentBubble {
     if (document.getElementById('intelligent-bubble')) return; // Already exists
     this.createBubbleElement();
     this.setupContextListener();
+    this.setupContextInvalidationListener();
   }
 
   createBubbleElement() {
@@ -235,17 +237,45 @@ class EnhancedIntelligentBubble {
     this.trackBubbleDismissal();
   }
 
+  // Helper method to safely send messages to background
+  async sendMessageToBackground(messageData) {
+    // Use global message sender if available, otherwise fall back to local method
+    if (window.extensionMessageSender) {
+      return await window.extensionMessageSender.sendMessage(messageData);
+    }
+    
+    // Fallback local method
+    if (!this.extensionContextValid) {
+      console.log('Extension context invalid, skipping message send');
+      return false;
+    }
+
+    try {
+      await chrome.runtime.sendMessage(messageData);
+      return true;
+    } catch (error) {
+      if (error.message.includes('Extension context invalidated')) {
+        console.log('Extension context invalidated, stopping message sending');
+        this.extensionContextValid = false;
+        return false;
+      } else {
+        console.log('Error sending message to background:', error);
+        return false;
+      }
+    }
+  }
+
   handlePrimaryAction() {
     const action = this.bubbleElement.querySelector('.primary-action').textContent;
     
     // Send action to background for tracking
-    chrome.runtime.sendMessage({
+    this.sendMessageToBackground({
       type: 'BUBBLE_ACTION',
       action: 'primary',
       actionText: action,
       context: this.currentContext,
       timestamp: Date.now()
-    }).catch(error => console.log('Error sending bubble action:', error));
+    });
 
     if (action === 'Focus Now') {
       // Close current tab if it's distracting
@@ -258,13 +288,13 @@ class EnhancedIntelligentBubble {
   handleSecondaryAction() {
     const action = this.bubbleElement.querySelector('.secondary-action').textContent;
     
-    chrome.runtime.sendMessage({
+    this.sendMessageToBackground({
       type: 'BUBBLE_ACTION',
       action: 'secondary', 
       actionText: action,
       context: this.currentContext,
       timestamp: Date.now()
-    }).catch(error => console.log('Error sending bubble action:', error));
+    });
 
     if (action === '5 Min Break') {
       // Set a reminder for 5 minutes
@@ -288,11 +318,11 @@ class EnhancedIntelligentBubble {
     this.showTemporaryMessage(reminderMessage);
     
     // Send break timer to background
-    chrome.runtime.sendMessage({
+    this.sendMessageToBackground({
       type: 'SET_BREAK_TIMER',
       duration: 5 * 60 * 1000, // 5 minutes
       timestamp: Date.now()
-    }).catch(error => console.log('Error setting break timer:', error));
+    });
   }
 
   showTemporaryMessage(text) {
@@ -312,22 +342,22 @@ class EnhancedIntelligentBubble {
   }
 
   trackBubbleDisplay(category, context) {
-    chrome.runtime.sendMessage({
+    this.sendMessageToBackground({
       type: 'BUBBLE_DISPLAYED',
       category,
       context,
       timestamp: Date.now()
-    }).catch(error => console.log('Error tracking bubble display:', error));
+    });
   }
 
   trackBubbleDismissal() {
     const lastMessage = this.messageHistory[this.messageHistory.length - 1];
     
-    chrome.runtime.sendMessage({
+    this.sendMessageToBackground({
       type: 'BUBBLE_DISMISSED',
       messageData: lastMessage,
       timestamp: Date.now()
-    }).catch(error => console.log('Error tracking bubble dismissal:', error));
+    });
   }
 
   // Public method to show bubble (called by background script)
@@ -343,6 +373,12 @@ class EnhancedIntelligentBubble {
       currentContext: this.currentContext
     };
   }
+
+  setupContextInvalidationListener() {
+    document.addEventListener('extensionContextInvalidated', () => {
+      this.extensionContextValid = false;
+    });
+  }
 }
 
 // Enhanced Bubble Manager with better message handling
@@ -351,20 +387,46 @@ class EnhancedBubbleManager {
     this.bubble = null;
     this.messageQueue = [];
     this.isProcessing = false;
+    this.extensionContextValid = true;
     this.init();
   }
 
   init() {
-    chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-      if (request.type === 'SHOW_BUBBLE') {
-        this.queueMessage(request);
-        sendResponse({ status: 'Bubble message queued' });
+    try {
+      chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+        try {
+          if (request.type === 'SHOW_BUBBLE') {
+            this.queueMessage(request);
+            sendResponse({ status: 'Bubble message queued' });
+          }
+
+          // NEW: Handle usage warnings (priority)
+          if (request.type === 'SHOW_USAGE_WARNING') {
+            this.showUsageWarningImmediate(request);
+            sendResponse({ status: 'Usage warning shown immediately' });
+          }
+          
+          if (request.type === 'BREAK_TIMER_FINISHED') {
+            this.showBreakEndReminder();
+            sendResponse({ status: 'Break reminder shown' });
+          }
+        } catch (error) {
+          console.log('Error handling message in bubble manager:', error);
+          if (error.message.includes('Extension context invalidated')) {
+            this.extensionContextValid = false;
+          }
+        }
+      });
+    } catch (error) {
+      console.log('Error setting up message listener in bubble manager:', error);
+      if (error.message.includes('Extension context invalidated')) {
+        this.extensionContextValid = false;
       }
-      
-      if (request.type === 'BREAK_TIMER_FINISHED') {
-        this.showBreakEndReminder();
-        sendResponse({ status: 'Break reminder shown' });
-      }
+    }
+
+    // Listen for extension context invalidation
+    document.addEventListener('extensionContextInvalidated', () => {
+      this.extensionContextValid = false;
     });
   }
 
@@ -416,6 +478,28 @@ class EnhancedBubbleManager {
     this.bubble.showBubble('neutral', {
       text: "⏰ Break time's up! Ready to get back to crushing your goals?"
     });
+  }
+
+  // NEW: Handle immediate usage warnings (bypasses queue)
+  showUsageWarningImmediate(request) {
+    if (!this.bubble) {
+      this.bubble = new EnhancedIntelligentBubble();
+    }
+    
+    // Usage warnings are high priority and should show immediately
+    // They can interrupt current bubbles if needed
+    if (this.bubble.isVisible) {
+      this.bubble.hideBubble(); // Hide current bubble
+    }
+    
+    // Show the usage warning with high priority styling
+    this.bubble.showBubble('distracted', {
+      text: request.message || "⚠️ Usage pattern detected - time to refocus!"
+    }, request.context);
+    
+    // Usage warnings stay visible longer
+    clearTimeout(this.bubble.hideTimer);
+    this.bubble.hideTimer = setTimeout(() => this.bubble.hideBubble(), 20000); // 20 seconds
   }
 }
 

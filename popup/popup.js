@@ -116,10 +116,10 @@ document.addEventListener('DOMContentLoaded', () => {
       taskElement.innerHTML = `
         <div class="task-text">${escapeHtml(task.text)}</div>
         <div class="task-actions">
-          <button class="task-btn toggle" onclick="toggleTaskCompletion('${task.id}')" title="${task.completed ? 'Mark incomplete' : 'Mark complete'}">
+          <button class="task-btn toggle" data-task-id="${task.id}" data-action="toggle" title="${task.completed ? 'Mark incomplete' : 'Mark complete'}">
             ${task.completed ? '✅' : '⭕'}
           </button>
-          <button class="task-btn delete" onclick="deleteTask('${task.id}')" title="Delete task">
+          <button class="task-btn delete" data-task-id="${task.id}" data-action="delete" title="Delete task">
             🗑️
           </button>
         </div>
@@ -132,6 +132,24 @@ document.addEventListener('DOMContentLoaded', () => {
       
       tasksList.appendChild(taskElement);
     });
+
+    // Add event listeners to task buttons
+    tasksList.addEventListener('click', handleTaskButtonClick);
+  }
+
+  // Handle task button clicks
+  function handleTaskButtonClick(event) {
+    const button = event.target.closest('.task-btn');
+    if (!button) return;
+
+    const taskId = button.dataset.taskId;
+    const action = button.dataset.action;
+
+    if (action === 'toggle') {
+      toggleTaskCompletion(taskId);
+    } else if (action === 'delete') {
+      deleteTask(taskId);
+    }
   }
 
   // Update current task select dropdown
@@ -166,7 +184,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Toggle task completion
-  window.toggleTaskCompletion = function(taskId) {
+  function toggleTaskCompletion(taskId) {
     const task = dailyTasks.find(t => t.id === taskId);
     if (task) {
       task.completed = !task.completed;
@@ -191,7 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   // Delete task
-  window.deleteTask = function(taskId) {
+  function deleteTask(taskId) {
     const taskIndex = dailyTasks.findIndex(t => t.id === taskId);
     if (taskIndex !== -1) {
       const deletedTask = dailyTasks[taskIndex];
@@ -204,7 +222,6 @@ document.addEventListener('DOMContentLoaded', () => {
       
       renderTasksList();
       updateCurrentTaskSelect();
-      updateAddButton();
       
       showStatus(`Task "${deletedTask.text}" deleted`, 'info');
     }
