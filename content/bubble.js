@@ -12,6 +12,9 @@ class EnhancedIntelligentBubble {
     this.messageHistory = [];
     this.extensionContextValid = true;
     this.currentUserProfile = null; // NEW: Store user profile
+    this.distractionBubbleCount = 0; // Track distraction bubbles
+    this.notificationQueue = [];
+    this.isNotificationActive = false;
     this.init();
   }
 
@@ -51,7 +54,7 @@ class EnhancedIntelligentBubble {
     this.bubbleElement.innerHTML = `
       <div class="bubble-content">
         <div class="profile-icon">
-          <img class="profile-glow-i mg" alt="Profile Icon" width="64" height="64" style="border-radius:50%;object-fit:cover;" />
+          <img class="profile-glow-img" alt="Profile Icon" width="64" height="64" style="border-radius:50%;object-fit:cover;" />
         </div>
         <div class="bubble-header">
           <div class="bubble-header-icon"></div>
@@ -264,31 +267,62 @@ class EnhancedIntelligentBubble {
     }
   }
 
-  showBubble(category, message, context = null, position = 'top-right') {
-    if (!this.bubbleElement) this.createBubbleElement();
+  // Notification queue with 10s delay
+  queueNotification(category, message, context = null, position = 'top-right') {
+    this.notificationQueue.push({category, message, context, position});
+    this.processNotificationQueue();
+  }
 
-    // Update context if provided (KEEP YOUR EXISTING LOGIC)
+  async processNotificationQueue() {
+    if (this.isNotificationActive || this.notificationQueue.length === 0) return;
+    this.isNotificationActive = true;
+    const {category, message, context, position} = this.notificationQueue.shift();
+    await this.showBubbleWithDelay(category, message, context, position);
+    setTimeout(() => {
+      this.isNotificationActive = false;
+      this.processNotificationQueue();
+    }, 10000); // 10s delay
+  }
+
+  async showBubbleWithDelay(category, message, context, position) {
+    // Track distraction bubbles
+    if (category === 'distracted') {
+      this.distractionBubbleCount++;
+    } else {
+      this.distractionBubbleCount = 0;
+    }
+    // If 3rd+ distraction bubble, force overlay and blur
+    let forceOverlay = false;
+    if (category === 'distracted' && this.distractionBubbleCount >= 3) {
+      forceOverlay = true;
+    }
+    this.showBubble(category, message, context, position, forceOverlay);
+  }
+
+  // Add forceOverlay param
+  showBubble(category, message, context = null, position = 'top-right', forceOverlay = false) {
+    if (!this.bubbleElement) this.createBubbleElement();
     if (context) {
       this.updateContextDisplay(context);
     }
-
-    // NEW: Show overlay for dramatic center-screen effect only if center
-    if (position === 'center') {
+    // Overlay logic
+    if (position === 'center' || forceOverlay) {
       this.overlayElement.classList.add('visible');
+      document.body.classList.add('bubble-blur-bg');
     } else {
       this.overlayElement.classList.remove('visible');
+      document.body.classList.remove('bubble-blur-bg');
     }
-
-    // Reset state and apply category styling (KEEP YOUR EXISTING LOGIC)
+    // Reset state and apply category styling
     this.bubbleElement.className = '';
     this.bubbleElement.classList.add(category, 'visible', position);
-    
-    // NEW: Add high-impact mode for severe distractions
+    // Pop-in animation for top-right
+    if (position === 'top-right') {
+      this.bubbleElement.classList.add('pop-in');
+    }
     if (category === 'distracted') {
       this.bubbleElement.classList.add('high-impact');
     }
-    
-    // Update header based on category (KEEP YOUR EXISTING LOGIC)
     const headerText = this.bubbleElement.querySelector('.header-text');
     const categoryLabels = {
       'focused': 'AI Coach',
@@ -296,11 +330,7 @@ class EnhancedIntelligentBubble {
       'neutral': 'Quick Reminder'
     };
     headerText.textContent = categoryLabels[category] || 'AI Coach';
-
-    // Start typing animation (ENHANCED VERSION)
     this.typeMessage(message);
-
-    // Store in message history (KEEP YOUR EXISTING LOGIC)
     this.messageHistory.push({
       category,
       message: typeof message === 'string' ? message : message.text,
@@ -308,34 +338,21 @@ class EnhancedIntelligentBubble {
       timestamp: Date.now(),
       position
     });
-
-    // Auto-hide timer (KEEP YOUR EXISTING LOGIC)
     clearTimeout(this.hideTimer);
-    const autoHideDelay = category === 'distracted' ? 15000 : 12000;
-    this.hideTimer = setTimeout(() => this.hideBubble(), autoHideDelay);
-
     this.isVisible = true;
-
-    // Track bubble display (KEEP YOUR EXISTING LOGIC)
     this.trackBubbleDisplay(category, context);
   }
 
   hideBubble() {
     if (!this.isVisible) return;
-    
     clearInterval(this.typingTimer);
     clearTimeout(this.hideTimer);
-
-    this.bubbleElement.classList.remove('visible');
-    this.overlayElement.classList.remove('visible'); // NEW: Hide overlay
-    
-    // Hide action buttons (KEEP YOUR EXISTING LOGIC)
+    this.bubbleElement.classList.remove('visible', 'pop-in');
+    this.overlayElement.classList.remove('visible');
+    document.body.classList.remove('bubble-blur-bg');
     this.bubbleElement.querySelector('.primary-action').style.display = 'none';
     this.bubbleElement.querySelector('.secondary-action').style.display = 'none';
-    
     this.isVisible = false;
-
-    // Track bubble dismissal (KEEP YOUR EXISTING LOGIC)
     this.trackBubbleDismissal();
   }
 
@@ -472,9 +489,9 @@ class EnhancedIntelligentBubble {
     });
   }
 
-  // Public method to show bubble (called by background script) (KEEP YOUR EXISTING CODE)
+  // Update showBubbleWithData to use queueNotification
   showBubbleWithData(data) {
-    this.showBubble(data.category, data.message, data.context, data.position || 'top-right');
+    this.queueNotification(data.category, data.message, data.context, data.position || 'top-right');
   }
 
   // Get bubble statistics (KEEP YOUR EXISTING CODE)
